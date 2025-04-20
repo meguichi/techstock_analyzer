@@ -22,7 +22,6 @@ if not api_key:
     st.error("❌ OpenAIのAPIキーが設定されていません。secrets.toml か 環境変数に設定してください。")
     st.stop()
 
-client = OpenAI(api_key=api_key)
 def generate_advice(data_dict):
     messages = []
     for ticker, df in data_dict.items():
