@@ -40,7 +40,7 @@ def get_ticker_from_company_name(name):
 def main_dashboard():
     st.title("📊 テクニカル分析ダッシュボード")
 
-        company_input = st.text_input(
+    company_input = st.text_input(
         "会社名（カンマ区切りで複数指定可）",
         value=st.session_state.get("company_input", "")
     )
