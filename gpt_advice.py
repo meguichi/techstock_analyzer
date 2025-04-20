@@ -3,7 +3,7 @@ from openai import OpenAI
 import streamlit as st
 import os
 
-# 🔐 APIクライアントの初期化
+# 🔐 OpenAI APIキーの取得（安全対応）
 api_key = os.getenv("OPENAI_API_KEY")
 try:
     if not api_key:
@@ -17,11 +17,7 @@ if api_key:
         client = OpenAI(api_key=api_key)
     except Exception as e:
         st.warning(f"OpenAIクライアントの初期化に失敗しました: {e}")
-
-if not client:
-    st.error("❌ OpenAIのAPIクライアントが初期化されていません。環境変数または secrets にAPIキーを設定してください。")
-    st.stop()
-
+        
 def generate_advice(data_dict):
     messages = []
     for ticker, df in data_dict.items():
@@ -52,3 +48,6 @@ def generate_advice(data_dict):
     except Exception as e:
         st.error("ChatGPTによるアドバイス生成に失敗しました。")
         st.exception(e)
+
+
+
