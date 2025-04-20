@@ -7,24 +7,10 @@ from gpt_advice import generate_advice
 from openai import OpenAI
 import os
 import re
-# APIクライアントの初期化
-# secrets.toml または 環境変数からAPIキーを取得
-# 先に環境変数を確認、次に secrets を試す（順序が重要！）
-api_key = os.getenv("OPENAI_API_KEY")
 
-try:
-    if not api_key:
-        api_key = st.secrets["OPENAI_API_KEY"]
-except Exception:
-    pass  # secrets.toml が存在しない環境でも落ちないように
+client = OpenAI(api_key=os.getenv("OPENAI_API_KEY") or st.secrets["OPENAI_API_KEY"])
 
-if not api_key:
-    st.error("❌ OpenAIのAPIキーが見つかりません。環境変数または .streamlit/secrets.toml に設定してください。")
-    st.stop()
-
-client = OpenAI(api_key=api_key)
-
-## セッションステート初期化
+# セッションステート初期化
 if "ticker_map" not in st.session_state:
     st.session_state.ticker_map = {}
 if "selected_tickers" not in st.session_state:
@@ -56,27 +42,27 @@ def main_dashboard():
 
     st.session_state.company_input = st.text_input("会社名（カンマ区切りで複数指定可）", value=st.session_state.company_input)
 
+    selected_tickers = []
+    ticker_map = {}
+
     if st.button("銘柄コードを取得"):
-        st.session_state.ticker_map.clear()
         with st.spinner("ChatGPTから銘柄コードを取得中..."):
             for name in st.session_state.company_input.split(","):
                 name = name.strip()
-                if not name:
-                    continue
                 code = get_ticker_from_company_name(name)
                 if code:
-                    st.session_state.ticker_map[code] = name
+                    ticker_map[code] = name
                 else:
-                    st.warning(f"{name} の証券コードを取得できませんでした。")
+                    st.warning(f"{name} のコード取得に失敗しました。")
+        st.session_state.ticker_map = ticker_map
 
-    selected = []
     if st.session_state.ticker_map:
         st.markdown("### ✅ 取得された銘柄コード")
         for code, name in st.session_state.ticker_map.items():
             if st.checkbox(f"{code}（{name}）", key=code):
-                selected.append(code)
+                selected_tickers.append(code)
 
-    st.session_state.selected_tickers = selected
+        st.session_state.selected_tickers = selected_tickers
 
     if st.session_state.selected_tickers:
         st.markdown("---")
