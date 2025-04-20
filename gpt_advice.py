@@ -3,31 +3,38 @@ from openai import OpenAI
 import streamlit as st
 import os
 
-# APIクライアントの初期化
-# 先に環境変数を確認、次に secrets を試す（順序が重要！）
+# 🔐 APIクライアントの初期化
 api_key = os.getenv("OPENAI_API_KEY")
-
 try:
     if not api_key:
         api_key = st.secrets["OPENAI_API_KEY"]
 except Exception:
-    pass  # secrets.toml が存在しない環境でも落ちないように
+    api_key = None
 
-if not api_key:
-    st.error("❌ OpenAIのAPIキーが見つかりません。環境変数または .streamlit/secrets.toml に設定してください。")
-    st.stop()
+client = None
+if api_key:
+    try:
+        client = OpenAI(api_key=api_key)
+    except Exception as e:
+        st.warning(f"OpenAIクライアントの初期化に失敗しました: {e}")
 
-client = OpenAI(api_key=api_key)
-if not api_key:
-    st.error("❌ OpenAIのAPIキーが設定されていません。secrets.toml か 環境変数に設定してください。")
+if not client:
+    st.error("❌ OpenAIのAPIクライアントが初期化されていません。環境変数または secrets にAPIキーを設定してください。")
     st.stop()
 
 def generate_advice(data_dict):
     messages = []
     for ticker, df in data_dict.items():
-        latest_rsi = df['RSI'].dropna().iloc[-1]
-        latest_close = df['Close'].iloc[-1]
-        messages.append(f"{ticker} の直近終値は {latest_close:.2f} 円、RSIは {latest_rsi:.2f} です。")
+        try:
+            latest_rsi = df['RSI'].dropna().iloc[-1]
+            latest_close = df['Close'].iloc[-1]
+            messages.append(f"{ticker} の直近終値は {latest_close:.2f} 円、RSIは {latest_rsi:.2f} です。")
+        except Exception as e:
+            st.warning(f"{ticker} のデータ整形に失敗しました: {e}")
+
+    if not messages:
+        st.warning("有効なデータが見つかりませんでした。")
+        return
 
     prompt = "以下は複数の株式のテクニカル分析の要約です。それを元に今後の投資アドバイスを日本語で簡潔に出してください。\n" + "\n".join(messages)
 
