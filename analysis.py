@@ -1,3 +1,14 @@
+from pathlib import Path
+import appdirs as ad
+
+CACHE_DIR = ".cache"
+
+# appdirs が使用するキャッシュディレクトリを上書き
+ad.user_cache_dir = lambda *args: CACHE_DIR
+
+# キャッシュディレクトリを作成（存在しない場合）
+Path(CACHE_DIR).mkdir(exist_ok=True)
+
 import yfinance as yf
 import pandas as pd
 
