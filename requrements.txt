@@ -1,7 +1,0 @@
-streamlit
-yfinance
-pandas
-matplotlib
-seaborn
-openai
-appdirs
