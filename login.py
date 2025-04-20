@@ -1,7 +1,14 @@
+# login.py（bcrypt → hashlib に置き換え）
 import streamlit as st
 import json
-import bcrypt
+import hashlib
 from datetime import datetime
+
+def hash_password(password):
+    return hashlib.sha256(password.encode()).hexdigest()
+
+def check_password(input_password, stored_hash):
+    return hash_password(input_password) == stored_hash
 
 def load_credentials():
     with open('config.json', 'r') as file:
@@ -23,8 +30,8 @@ def login_page():
 
         if submitted:
             if username in credentials:
-                stored_hash = credentials[username]["password"].encode('utf-8')
-                if bcrypt.checkpw(password.encode('utf-8'), stored_hash):
+                stored_hash = credentials[username]["password"]
+                if check_password(password, stored_hash):
                     st.session_state.logged_in = True
                     st.session_state.username = username
                     write_login_log(username)
