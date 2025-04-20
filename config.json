@@ -1,6 +1,10 @@
 {
   "credentials": {
-    "user1": { "password": "$2b$12$DAR6FfezHzV10dBeibOwJOZkNlhnKWYCbL/PyVaSqXSyJmK4rizO6" },
-    "admin": { "password": "$2b$12$DAR6FfezHzV10dBeibOwJOZkNlhnKWYCbL/PyVaSqXSyJmK4rizO6" }
+    "user1": {
+      "password": "6ca13d52ca70c883e0f0bb101e425a89e8624de51db2d2392593af6a84118090"
+    },
+    "admin": {
+      "password": "6ca13d52ca70c883e0f0bb101e425a89e8624de51db2d2392593af6a84118090"
+    }
   }
 }
