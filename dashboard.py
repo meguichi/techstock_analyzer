@@ -8,18 +8,39 @@ from openai import OpenAI
 import os
 import re
 
-client = OpenAI(api_key=os.getenv("OPENAI_API_KEY") or st.secrets["OPENAI_API_KEY"])
+# 🔐 OpenAI APIキーの取得（安全対応）
+api_key = os.getenv("OPENAI_API_KEY")
+try:
+    if not api_key:
+        api_key = st.secrets["OPENAI_API_KEY"]
+except Exception:
+    api_key = None
 
-# セッションステート初期化
-if "ticker_map" not in st.session_state:
-    st.session_state.ticker_map = {}
-if "selected_tickers" not in st.session_state:
-    st.session_state.selected_tickers = []
-if "company_input" not in st.session_state:
-    st.session_state.company_input = ""
+client = None
+if api_key:
+    try:
+        client = OpenAI(api_key=api_key)
+    except Exception as e:
+        st.warning(f"OpenAIクライアントの初期化に失敗しました: {e}")
 
-# ChatGPTで会社名から証券コードを取得（安定性向上）
+# fallback辞書（必要に応じて拡張可能）
+manual_ticker_map = {
+    "トヨタ": "7203.T",
+    "任天堂": "7974.T",
+    "ソニー": "6758.T",
+    "キーエンス": "6861.T"
+}
+
+# ChatGPTで会社名から証券コードを取得（またはfallback）
 def get_ticker_from_company_name(name):
+    # fallback辞書優先
+    if name in manual_ticker_map:
+        return manual_ticker_map[name]
+
+    if client is None:
+        st.warning("OpenAI APIが使えないため、証券コードの取得をスキップします。")
+        return None
+
     prompt = f"{name} の日本株式の証券コード（形式: 7203.Tなど）を教えてください。証券コードのみを回答してください。"
     try:
         response = client.chat.completions.create(
@@ -37,6 +58,7 @@ def get_ticker_from_company_name(name):
         st.warning(f"{name} の証券コード取得に失敗しました: {e}")
     return None
 
+# メインダッシュボード
 def main_dashboard():
     st.title("📊 テクニカル分析ダッシュボード")
 
@@ -50,25 +72,26 @@ def main_dashboard():
     ticker_map = {}
 
     if st.button("銘柄コードを取得"):
-        with st.spinner("ChatGPTから銘柄コードを取得中..."):
+        with st.spinner("銘柄コードを取得中..."):
             for name in st.session_state.company_input.split(","):
                 name = name.strip()
+                if not name:
+                    continue
                 code = get_ticker_from_company_name(name)
                 if code:
                     ticker_map[code] = name
                 else:
-                    st.warning(f"{name} のコード取得に失敗しました。")
+                    st.warning(f"❌ {name} のコード取得に失敗しました。")
         st.session_state.ticker_map = ticker_map
 
-    if st.session_state.ticker_map:
+    if st.session_state.get("ticker_map"):
         st.markdown("### ✅ 取得された銘柄コード")
         for code, name in st.session_state.ticker_map.items():
             if st.checkbox(f"{code}（{name}）", key=code):
                 selected_tickers.append(code)
-
         st.session_state.selected_tickers = selected_tickers
 
-    if st.session_state.selected_tickers:
+    if st.session_state.get("selected_tickers"):
         st.markdown("---")
         col1, col2 = st.columns(2)
         with col1:
