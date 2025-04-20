@@ -1,0 +1,6 @@
+{
+  "credentials": {
+    "user1": { "password": "$2b$12$DAR6FfezHzV10dBeibOwJOZkNlhnKWYCbL/PyVaSqXSyJmK4rizO6" },
+    "admin": { "password": "$2b$12$DAR6FfezHzV10dBeibOwJOZkNlhnKWYCbL/PyVaSqXSyJmK4rizO6" }
+  }
+}
